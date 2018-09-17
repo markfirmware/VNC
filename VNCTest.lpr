@@ -7,7 +7,8 @@ program VNCTest;
 {$notes off}
 
 uses
-  RaspberryPi3,
+  {$ifdef BUILD_QEMUVPB} QEMUVersatilePB, VersatilePB, {$endif}
+  {$ifdef BUILD_RPI3}    RaspberryPi3,                 {$endif}
   GlobalConfig,
   GlobalConst,
   GlobalTypes,
@@ -17,8 +18,9 @@ uses
   Classes,
   Console,
   Ultibo, uVNC, uCanvas,
+  Winsock2,
 {$ifdef use_tftp}
-  uTFTP, Winsock2,
+  uTFTP,
 {$endif}
   uLog
   { Add additional units here };
@@ -38,19 +40,38 @@ var
   Helper : THelper;
   aVNC : TVNCServer;
 
+procedure SerialChar (c : char);
+begin
+  {$ifdef BUILD_QEMUVPB}
+    PLongWord(VERSATILEPB_UART0_REGS_BASE)^ := Ord(c);
+  {$endif}
+end;
+
+procedure SerialMessage (s : string);
+var
+  i : integer;
+begin
+  for i:=1 to High (s) do
+    SerialChar (s[i]);
+  SerialChar (char (10));
+end;
+
 procedure Log1 (s : string);
 begin
   ConsoleWindowWriteLn (Console1, s);
+  SerialMessage ('Log1 ' + s);
 end;
 
 procedure Log2 (s : string);
 begin
   ConsoleWindowWriteLn (Console2, s);
+  SerialMessage ('Log2 ' + s);
 end;
 
 procedure Log3 (s : string);
 begin
   ConsoleWindowWriteLn (Console3, s);
+  SerialMessage ('Log3 ' + s);
 end;
 
 procedure Msg2 (Sender : TObject; s : string);
@@ -60,7 +81,9 @@ end;
 
 procedure WaitForSDDrive;
 begin
-  while not DirectoryExists ('C:\') do sleep (500);
+  {$ifndef BUILD_QEMUVPB}
+    while not DirectoryExists ('C:\') do sleep (500);
+  {$endif}
 end;
 
 function WaitForIPComplete : string;
