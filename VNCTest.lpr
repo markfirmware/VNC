@@ -8,7 +8,9 @@ program VNCTest;
 
 uses
   {$ifdef BUILD_QEMUVPB} QEMUVersatilePB, VersatilePB, {$endif}
-  {$ifdef BUILD_RPI3}    RaspberryPi3,                 {$endif}
+  {$ifdef BUILD_RPI    } RaspberryPi,                  {$endif}
+  {$ifdef BUILD_RPI2   } RaspberryPi2,                 {$endif}
+  {$ifdef BUILD_RPI3   } RaspberryPi3,                 {$endif}
   GlobalConfig,
   GlobalConst,
   GlobalTypes,
