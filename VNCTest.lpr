@@ -11,6 +11,7 @@ uses
   {$ifdef BUILD_RPI    } RaspberryPi,                  {$endif}
   {$ifdef BUILD_RPI2   } RaspberryPi2,                 {$endif}
   {$ifdef BUILD_RPI3   } RaspberryPi3,                 {$endif}
+  RaspberryPi3,
   GlobalConfig,
   GlobalConst,
   GlobalTypes,
@@ -114,13 +115,30 @@ begin
   Consolewindowwrite (Console3, IntToStr (x) + ',' + IntToStr (y) + ' Btns ' + BtnMask.ToHexString (2) + '    ');
 end;
 
+var
+  PixelY:Integer=160 + 60;
+
 procedure THelper.VNCKey (Sender: TObject; Thread: TVNCThread; Key: TCard32;
   Down: boolean);
 begin
   ConsoleWindowSetXY (Console3, 1, 2);
   Consolewindowwrite (Console3, IntToStr (Key) + ' Down ' + ft[Down] + '    ');
+  aVNC.Canvas.DrawText (40, PixelY, 'Key Pressed!', 'arial', 24, COLOR_WHITE);
+  Inc(PixelY, 60);
 end;
 
+procedure RestoreBootFile(Prefix,FileName:String);
+var
+ Source:String;
+begin
+ Source:=Prefix + '-' + FileName;
+ Log(Format('Restoring from %s ...',[Source]));
+ while not DirectoryExists('C:\') do
+  sleep(500);
+ if FileExists(Source) then
+  CopyFile(PChar(Source),PChar(FileName),False);
+ Log(Format('Restoring from %s done',[Source]));
+end;
 
 
 begin
@@ -130,6 +148,8 @@ begin
   SetLogProc (@Log1);
   Log1 ('VNC Server Test.');
   Log1 ('2018 pjde.');
+
+  RestoreBootFile('default','config.txt');
 
   Log3 ('');
   WaitForSDDrive;
@@ -164,6 +184,10 @@ begin
         case (ch) of
           '1' : aVNC.Active := true;
           '2' : aVNC.Active := false;
+          '3' : begin
+                  aVNC.Canvas.DrawText (40, PixelY, 'Local Key Pressed!', 'arial', 24, COLOR_WHITE);
+                  Inc(PixelY, 60);
+                end;
           end;
     end;
   ThreadHalt (0);
