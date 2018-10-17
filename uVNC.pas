@@ -245,7 +245,7 @@ type
     Title : string;
     Canvas : TCanvas;
     procedure InitCanvas (w, h : integer);
-    constructor Create;
+    constructor Create (Port: Integer);
     destructor Destroy; override;
     property OnPointer : TVNCPointerEvent read FOnPointer write FOnPointer;
     property OnKey : TVNCKeyEvent read FOnKey write FOnKey;
@@ -764,10 +764,10 @@ begin
   Canvas.SetSize (w, h, COLOR_FORMAT_ARGB32);
 end;
 
-constructor TVNCServer.Create;
+constructor TVNCServer.Create (Port: Integer);
 begin
   inherited Create;
-  BoundPort := 5900;
+  BoundPort := Port;
   OnCreateThread := @DoCreateThread;
   Width := 0;
   Height := 0;

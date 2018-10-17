@@ -7,10 +7,10 @@ program VNCTest;
 {$notes off}
 
 uses
-  {$ifdef BUILD_QEMUVPB} QEMUVersatilePB, VersatilePB, {$endif}
-  {$ifdef BUILD_RPI    } RaspberryPi,                  {$endif}
-  {$ifdef BUILD_RPI2   } RaspberryPi2,                 {$endif}
-  {$ifdef BUILD_RPI3   } RaspberryPi3,                 {$endif}
+//{$ifdef BUILD_QEMUVPB} QEMUVersatilePB, VersatilePB, {$endif}
+//{$ifdef BUILD_RPI    } RaspberryPi,                  {$endif}
+//{$ifdef BUILD_RPI2   } RaspberryPi2,                 {$endif}
+//{$ifdef BUILD_RPI3   } RaspberryPi3,                 {$endif}
   RaspberryPi3,
   GlobalConfig,
   GlobalConst,
@@ -26,23 +26,13 @@ uses
   uTFTP,
 {$endif}
   uLog,
+  uVNCDemo,
   uVNCClock
   { Add additional units here };
 
-type
-
-  { THelper }
-  THelper = class
-    procedure VNCPointer (Sender : TObject; Thread : TVNCThread; x, y : TCard16; BtnMask : TCard8);
-    procedure VNCKey (Sender : TObject; Thread : TVNCThread; Key : TCard32; Down : boolean);
-  end;
-
 var
   Console1, Console2, Console3 : TWindowHandle;
-  ch : char;
   IPAddress : string;
-  Helper : THelper;
-  aVNC : TVNCServer;
 
 procedure SerialChar (c : char);
 begin
@@ -107,27 +97,6 @@ begin
   TCP.Free;
 end;
 
-{ THelper }
-
-procedure THelper.VNCPointer (Sender: TObject; Thread: TVNCThread; x,
-  y: TCard16; BtnMask: TCard8);
-begin
-  ConsoleWindowSetXY (Console3, 1, 1);
-  Consolewindowwrite (Console3, IntToStr (x) + ',' + IntToStr (y) + ' Btns ' + BtnMask.ToHexString (2) + '    ');
-end;
-
-var
-  PixelY:Integer=160 + 60;
-
-procedure THelper.VNCKey (Sender: TObject; Thread: TVNCThread; Key: TCard32;
-  Down: boolean);
-begin
-  ConsoleWindowSetXY (Console3, 1, 2);
-  Consolewindowwrite (Console3, IntToStr (Key) + ' Down ' + ft[Down] + '    ');
-  aVNC.Canvas.DrawText (40, PixelY, 'Key Pressed!', 'arial', 24, COLOR_WHITE);
-  Inc(PixelY, 60);
-end;
-
 procedure RestoreBootFile(Prefix,FileName:String);
 var
  Source:String;
@@ -139,36 +108,6 @@ begin
  if FileExists(Source) then
   CopyFile(PChar(Source),PChar(FileName),False);
  Log(Format('Restoring from %s done',[Source]));
-end;
-
-procedure RunTest;
-begin
-  aVnc := TVNCServer.Create;
-  Helper := THelper.Create;
-  aVNC.OnKey := @Helper.VNCKey;
-  aVNC.OnPointer := @Helper.VNCPointer;
-  aVNC.InitCanvas (640, 480);
-  aVNC.Canvas.Fill (COLOR_RED);
-  aVNC.Canvas.Fill (SetRect (50, 50, 100, 200), COLOR_GREEN);
-  aVNC.Canvas.Fill (SetRect (200, 50, 250, 300), COLOR_BLUEIVY);
-  aVNC.Canvas.DrawText (40, 40, 'ULTIBO VNC TEST.', 'arial', 24, COLOR_WHITE);
-  aVNC.Canvas.DrawText (40, 100, 'THIS IS A CANVAS.', 'arial', 24, COLOR_WHITE);
-  aVNC.Canvas.DrawText (40, 160, 'THIS IS NOT THE FRAMEBUFFER.', 'arial', 24, COLOR_WHITE);
-  aVNC.Title := 'Test of Ultibo VNC Server';;
-  aVNC.Active := true;
-  ch := #0;
-  while true do
-    begin
-      if ConsoleGetKey (ch, nil) then
-        case (ch) of
-          '1' : aVNC.Active := true;
-          '2' : aVNC.Active := false;
-          '3' : begin
-                  aVNC.Canvas.DrawText (40, PixelY, 'Local Key Pressed!', 'arial', 24, COLOR_WHITE);
-                  Inc(PixelY, 60);
-                end;
-          end;
-    end;
 end;
 
 procedure RunMain;
@@ -195,12 +134,11 @@ begin
   Log2 ('');
 {$endif}
 
-  //RunTest;
-  RunClock;
+  VncDemoServer (5900, Console3);
+  VncClockServer (5901);
   ThreadHalt (0);
 end;
 
 begin
  RunMain;
 end.
-
