@@ -25,7 +25,8 @@ uses
 {$ifdef use_tftp}
   uTFTP,
 {$endif}
-  uLog
+  uLog,
+  uVNCClock
   { Add additional units here };
 
 type
@@ -67,7 +68,7 @@ end;
 
 procedure Log2 (s : string);
 begin
-  ConsoleWindowWriteLn (Console2, s);
+ ConsoleWindowWriteLn (Console2, s);
   SerialMessage ('Log2 ' + s);
 end;
 
@@ -140,31 +141,9 @@ begin
  Log(Format('Restoring from %s done',[Source]));
 end;
 
-
+procedure RunTest;
 begin
-  Console1 := ConsoleWindowCreate (ConsoleDeviceGetDefault, CONSOLE_POSITION_LEFT, true);
-  Console2 := ConsoleWindowCreate (ConsoleDeviceGetDefault, CONSOLE_POSITION_TOPRIGHT, false);
-  Console3 := ConsoleWindowCreate (ConsoleDeviceGetDefault, CONSOLE_POSITION_BOTTOMRIGHT, false);
-  SetLogProc (@Log1);
-  Log1 ('VNC Server Test.');
-  Log1 ('2018 pjde.');
-
-  RestoreBootFile('default','config.txt');
-
-  Log3 ('');
-  WaitForSDDrive;
-  Log1 ('SD Drive Ready.');
-  IPAddress := WaitForIPComplete;
-  Log1 ('Run VNC Viewer and point to ' + IPAddress);
-
-{$ifdef use_tftp}
-  Log2 ('TFTP - Enabled.');
-  Log2 ('TFTP - Syntax "tftp -i ' + IPAddress + ' PUT kernel7.img"');
-  SetOnMsg (@Msg2);
-  Log2 ('');
-{$endif}
-
-  aVNC := TVNCServer.Create;
+  aVnc := TVNCServer.Create;
   Helper := THelper.Create;
   aVNC.OnKey := @Helper.VNCKey;
   aVNC.OnPointer := @Helper.VNCPointer;
@@ -190,6 +169,38 @@ begin
                 end;
           end;
     end;
+end;
+
+procedure RunMain;
+begin
+  Console1 := ConsoleWindowCreate (ConsoleDeviceGetDefault, CONSOLE_POSITION_LEFT, true);
+  Console2 := ConsoleWindowCreate (ConsoleDeviceGetDefault, CONSOLE_POSITION_TOPRIGHT, false);
+  Console3 := ConsoleWindowCreate (ConsoleDeviceGetDefault, CONSOLE_POSITION_BOTTOMRIGHT, false);
+  SetLogProc (@Log1);
+  Log1 ('VNC Server Test.');
+  Log1 ('2018 pjde.');
+
+  RestoreBootFile('default','config.txt');
+
+  Log3 ('');
+  WaitForSDDrive;
+  Log1 ('SD Drive Ready.');
+  IPAddress := WaitForIPComplete;
+  Log1 ('Run VNC Viewer and point to ' + IPAddress);
+
+{$ifdef use_tftp}
+  Log2 ('TFTP - Enabled.');
+  Log2 ('TFTP - Syntax "tftp -i ' + IPAddress + ' PUT kernel7.img"');
+  SetOnMsg (@Msg2);
+  Log2 ('');
+{$endif}
+
+  //RunTest;
+  RunClock;
   ThreadHalt (0);
+end;
+
+begin
+ RunMain;
 end.
 
